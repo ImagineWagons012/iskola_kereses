@@ -16,52 +16,32 @@ impl Default for Student {
     }
 }
 
-fn iskola_kereses(student: usize, students: &Vec<Student>, schools: &mut Vec<(u32, u32)>, results:&mut Vec<u32>) -> bool {
-    if student >= students.len() {
-        match check_results(schools) {
-            Some(()) => {
-                println!("{:?}", results);
-                return true;
-            },
-            None => return false
-        }
-    }
+fn iskola_kereses(student: usize, students: &Vec<Student>, schools: &mut Vec<(u32, u32)>, result: &mut Vec<u32>, results: &mut Vec<Vec<u32>>) {
     for kb in [students[student].first, students[student].second] {
         if kb == 0 { continue; }
-        schools[kb as usize - 1].1 += 1;
-        match check_results(schools) {
+        match check_results(schools, kb) {
             Some(()) => {
-                if iskola_kereses(student + 1, students, schools, results) {
-                    results.push(kb);
-                    return true;
+                schools[kb as usize - 1].1 += 1;
+                result.push(kb);
+                if student < students.len() - 1 {
+                    iskola_kereses(student + 1, students, schools, result, results);
                 }
-            }
-            None => {
-                if student < students.len() {
-                    if iskola_kereses(student + 1, students, schools, results) {
-                        results.push(kb);
-                        return true;
-                    }
+                else {
+                    results.push(result.clone());
                 }
                 schools[kb as usize - 1].1 -= 1;
-            },
+                result.pop();
+            }
+            None => (),
         }
-    }
-    match check_results(schools) {
-        Some(()) => return true,
-        None => return false
     }
 }
 
-fn check_results(schools: &mut Vec<(u32, u32)>) -> Option<()> {
-    for school in schools {
-        if school.0 != school.1 {
-            // println!("no");
-            return None;
-        }
+fn check_results(schools: &mut Vec<(u32, u32)>, kb: u32) -> Option<()> {
+    if schools[kb as usize - 1].1 + 1 <= schools[kb as usize - 1].0 {
+        return Some(());
     }
-    // println!("yes");
-    Some(())
+    None
 }
 
 fn main() -> Result<()> {
@@ -96,10 +76,11 @@ fn main() -> Result<()> {
     }
 
     let mut results = vec![];
-    iskola_kereses(0, &students, &mut schools, &mut results);
+    let mut result = vec![];
+    iskola_kereses(0, &students, &mut schools, &mut result, &mut results);
 
     results.reverse();
-    println!("{:?}::{:?}", results, schools);
+    println!("{:?}", results);
 
     Ok(())
 }
